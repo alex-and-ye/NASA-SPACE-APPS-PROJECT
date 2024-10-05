@@ -5,10 +5,11 @@ import os
 import pandas as pd
 import numpy as np
 def process_exoplanet_data():
-   # csv_file_path = os.path.join(settings.BASE_DIR, 'exoplanet_data.csv')
+    csv_file_path = os.path.join(os.path.dirname(__file__), 'exoplanet_data.csv')
     
     # Read the CSV file, skipping the comment lines
-    df = pd.read_csv('exoplanet_data.csv', comment='#')
+    df = pd.read_csv(csv_file_path, comment='#')
+
 
     # Select only the columns we need
     columns_of_interest = ['pl_name', 'hostname', 'pl_orbsmax', 'pl_rade', 'st_rad', 'sy_dist']
