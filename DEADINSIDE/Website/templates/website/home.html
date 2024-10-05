@@ -1,36 +1,117 @@
 {% extends 'website/base.html' %}
 {% load static %}
 {% block content %}
-<h1>Exoplanet SNR Data</h1>
+<style>
+    .planet-gallery {
+        display: flex;
+        overflow-x: auto;
+        padding: 20px 0;
+    }
+    .planet-card {
+        flex: 0 0 auto;
+        width: 200px;
+        margin-right: 20px;
+        cursor: pointer;
+    }
+    .planet-info {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+    }
+</style>
 
-<h2>SNR Statistics</h2>
-<ul>
-    <li>Average SNR: {{ exoplanet_data.avg_snr|floatformat:2 }}</li>
-    <li>Maximum SNR: {{ exoplanet_data.max_snr|floatformat:2 }}</li>
-    <li>Minimum SNR: {{ exoplanet_data.min_snr|floatformat:2 }}</li>
-</ul>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Filter Bar -->
+        <div class="col-md-3">
+            <h2>Filters</h2>
+            <form method="get" action=".">
+                <div class="form-group">
+                    <label for="telescope_diameter">Telescope Diameter (m):</label>
+                    <input type="number" class="form-control" id="telescope_diameter" name="telescope_diameter" value="{{ filters.telescope_diameter }}" min="1" max="100" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="min_snr">Minimum SNR:</label>
+                    <input type="number" class="form-control" id="min_snr" name="min_snr" value="{{ filters.min_snr }}" min="1" max="1000">
+                </div>
+                <div class="form-group">
+                    <label for="max_distance">Maximum Distance (parsecs):</label>
+                    <input type="number" class="form-control" id="max_distance" name="max_distance" value="{{ filters.max_distance }}" min="1" max="10000">
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="habitable_only" name="habitable_only" {% if filters.habitable_only == 'on' %}checked{% endif %}>
+                    <label class="form-check-label" for="habitable_only">Habitable Only</label>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Apply Filters</button>
+            </form>
+        </div>
 
-<h2>Exoplanets</h2>
-<table>
-    <tr>
-        <th>Planet Name</th>
-        <th>Host Star</th>
-        <th>Semi-Major Axis (AU)</th>
-        <th>Planet Radius (Earth Radii)</th>
-        <th>Star Radius (Solar Radii)</th>
-        <th>Distance (parsecs)</th>
-        <th>SNR</th>
-    </tr>
-    {% for planet in exoplanet_data.exoplanets %}
-    <tr>
-        <td>{{ planet.pl_name }}</td>
-        <td>{{ planet.hostname }}</td>
-        <td>{{ planet.pl_orbsmax|floatformat:3 }}</td>
-        <td>{{ planet.pl_rade|floatformat:2 }}</td>
-        <td>{{ planet.st_rad|floatformat:2 }}</td>
-        <td>{{ planet.sy_dist|floatformat:2 }}</td>
-        <td>{{ planet.snr|floatformat:2 }}</td>
-    </tr>
-    {% endfor %}
-</table>
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <h1>Exoplanet SNR Data (Middle 95%)</h1>
+
+            <h2>SNR Statistics</h2>
+            <ul>
+                <li>Total Planets: {{ exoplanet_data.total_planets }}</li>
+                <li>Average SNR: {{ exoplanet_data.avg_snr|floatformat:2 }}</li>
+                <li>Median SNR: {{ exoplanet_data.median_snr|floatformat:2 }}</li>
+                <li>Standard Deviation: {{ exoplanet_data.std_snr|floatformat:2 }}</li>
+                <li>Maximum SNR: {{ exoplanet_data.max_snr|floatformat:2 }}</li>
+                <li>Minimum SNR: {{ exoplanet_data.min_snr|floatformat:2 }}</li>
+            </ul>
+
+            <h2>SNR Distribution (Middle 95%)</h2>
+            <img src="data:image/png;base64,{{ exoplanet_data.histogram_image }}" alt="SNR Distribution Histogram" class="img-fluid">
+
+            <h2>SNR Box Plot (Middle 95%)</h2>
+            <img src="data:image/png;base64,{{ exoplanet_data.boxplot_image }}" alt="SNR Box Plot" class="img-fluid">
+
+            <h2>Exoplanets Gallery</h2>
+            <div class="planet-gallery">
+                {% for planet in exoplanet_data.exoplanets %}
+                <div class="planet-card" onclick="showPlanetInfo('{{ planet.pl_name }}')">
+                    <img src="https://placehold.co/200x200?text={{ planet.pl_name }}" alt="{{ planet.pl_name }}" class="img-fluid">
+                </div>
+                {% endfor %}
+            </div>
+
+            {% for planet in exoplanet_data.exoplanets %}
+            <div id="info-{{ planet.pl_name }}" class="planet-info">
+                <span class="close-btn" onclick="hidePlanetInfo('{{ planet.pl_name }}')">&times;</span>
+                <h3>{{ planet.pl_name }}</h3>
+                <p>
+                    Host Star: {{ planet.hostname }}<br>
+                    Distance: {{ planet.sy_dist|floatformat:2 }} parsecs<br>
+                    Planet Radius: {{ planet.pl_rade|floatformat:2 }} Earth Radii<br>
+                    SNR: {{ planet.snr|floatformat:2 }}<br>
+                    Semi-Major Axis: {{ planet.pl_orbsmax|floatformat:3 }} AU
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showPlanetInfo(planetName) {
+    document.getElementById('info-' + planetName).style.display = 'block';
+}
+
+function hidePlanetInfo(planetName) {
+    document.getElementById('info-' + planetName).style.display = 'none';
+}
+</script>
 {% endblock %}
