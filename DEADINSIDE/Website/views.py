@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import io
 import base64
+from django.http import JsonResponse
 
 def process_exoplanet_data(request):
     csv_file_path = os.path.join(os.path.dirname(__file__), 'exoplanet_data.csv')
@@ -100,6 +101,7 @@ def process_exoplanet_data(request):
         'histogram_image': histogram_image,
         'boxplot_image': boxplot_image,
         'total_planets': len(exoplanets),
+        'df_filtered': df_filtered  # Add this line to return the filtered DataFrame
     }
 def home_page_view(request):
     template_name = 'website/home.html'
@@ -117,3 +119,22 @@ def home_page_view(request):
         }
     }
     return render(request, template_name, context)
+
+def get_planets(request):
+    start = int(request.GET.get('start', 0))
+    count = int(request.GET.get('count', 6))
+    
+    # Get filter parameters from the request
+    telescope_diameter = float(request.GET.get('telescope_diameter', 6))
+    min_snr = float(request.GET.get('min_snr', 5))
+    habitable_only = request.GET.get('habitable_only', 'off') == 'on'
+    max_distance = float(request.GET.get('max_distance', 1000))
+
+    # Process the exoplanet data with the given filters
+    exoplanet_data = process_exoplanet_data(request)
+    df_filtered = exoplanet_data['df_filtered']
+    
+    # Get the requested slice of planets
+    planets = df_filtered.iloc[start:start+count].to_dict('records')
+    
+    return JsonResponse({'planets': planets})

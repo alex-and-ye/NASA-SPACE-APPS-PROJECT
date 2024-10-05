@@ -1,38 +1,6 @@
 {% extends 'website/base.html' %}
 {% load static %}
 {% block content %}
-<style>
-    .planet-gallery {
-        display: flex;
-        overflow-x: auto;
-        padding: 20px 0;
-    }
-    .planet-card {
-        flex: 0 0 auto;
-        width: 200px;
-        margin-right: 20px;
-        cursor: pointer;
-    }
-    .planet-info {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        z-index: 1000;
-    }
-    .close-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-    }
-</style>
-
 <div class="container-fluid">
     <div class="row">
         <!-- Filter Bar -->
@@ -81,37 +49,129 @@
 
             <h2>Exoplanets Gallery</h2>
             <div class="planet-gallery">
-                {% for planet in exoplanet_data.exoplanets %}
-                <div class="planet-card" onclick="showPlanetInfo('{{ planet.pl_name }}')">
-                    <img src="https://placehold.co/200x200?text={{ planet.pl_name }}" alt="{{ planet.pl_name }}" class="img-fluid">
+                <button class="nav-arrow left" onclick="navigatePlanets(-1)">&lt;</button>
+                <div class="planet-set">
+                    {% for planet in exoplanet_data.exoplanets|slice:":6" %}
+                    <div class="planet-card">
+                        <img src="https://placehold.co/300x200?text={{ planet.pl_name }}" alt="{{ planet.pl_name }}" class="planet-image">
+                        <div class="planet-info">
+                            <h3>{{ planet.pl_name }}</h3>
+                            <p>
+                                Host Star: {{ planet.hostname }}<br>
+                                Distance: {{ planet.sy_dist|floatformat:2 }} parsecs<br>
+                                Planet Radius: {{ planet.pl_rade|floatformat:2 }} Earth Radii<br>
+                                SNR: {{ planet.snr|floatformat:2 }}<br>
+                                Semi-Major Axis: {{ planet.pl_orbsmax|floatformat:3 }} AU
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+                <button class="nav-arrow right" onclick="navigatePlanets(1)">&gt;</button>
             </div>
-
-            {% for planet in exoplanet_data.exoplanets %}
-            <div id="info-{{ planet.pl_name }}" class="planet-info">
-                <span class="close-btn" onclick="hidePlanetInfo('{{ planet.pl_name }}')">&times;</span>
-                <h3>{{ planet.pl_name }}</h3>
-                <p>
-                    Host Star: {{ planet.hostname }}<br>
-                    Distance: {{ planet.sy_dist|floatformat:2 }} parsecs<br>
-                    Planet Radius: {{ planet.pl_rade|floatformat:2 }} Earth Radii<br>
-                    SNR: {{ planet.snr|floatformat:2 }}<br>
-                    Semi-Major Axis: {{ planet.pl_orbsmax|floatformat:3 }} AU
-                </p>
-            </div>
-            {% endfor %}
         </div>
     </div>
 </div>
 
+<style>
+    .planet-gallery {
+        display: flex;
+        overflow-x: hidden;
+        padding: 20px 0;
+        position: relative;
+    }
+    .planet-set {
+        display: flex;
+        transition: transform 0.3s ease;
+    }
+    .planet-card {
+        flex: 0 0 auto;
+        width: 300px;
+        margin-right: 20px;
+    }
+    .planet-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .planet-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px 10px 0 0;
+    }
+    .nav-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2em;
+        background: rgba(255,255,255,0.7);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .nav-arrow.left { left: 10px; }
+    .nav-arrow.right { right: 10px; }
+</style>
 <script>
-function showPlanetInfo(planetName) {
-    document.getElementById('info-' + planetName).style.display = 'block';
-}
+    // Pass the data from Django to JavaScript
+    const exoplanetData = {
+        totalPlanets: {{ exoplanet_data.total_planets }},
+        telescopeDiameter: {{ filters.telescope_diameter }},
+        minSNR: {{ filters.min_snr }},
+        habitableOnly: '{{ filters.habitable_only }}',
+        maxDistance: {{ filters.max_distance }}
+    };
 
-function hidePlanetInfo(planetName) {
-    document.getElementById('info-' + planetName).style.display = 'none';
-}
+    let currentSet = 0;
+    const planetsPerSet = 6;
+    const totalSets = Math.ceil(exoplanetData.totalPlanets / planetsPerSet);
+    
+    function navigatePlanets(direction) {
+        currentSet = (currentSet + direction + totalSets) % totalSets;
+        fetchPlanets(currentSet * planetsPerSet);
+    }
+    
+    function fetchPlanets(startIndex) {
+        const params = new URLSearchParams({
+            start: startIndex,
+            count: planetsPerSet,
+            telescope_diameter: exoplanetData.telescopeDiameter,
+            min_snr: exoplanetData.minSNR,
+            habitable_only: exoplanetData.habitableOnly,
+            max_distance: exoplanetData.maxDistance
+        });
+
+        fetch(`/get_planets/?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                const planetSet = document.querySelector('.planet-set');
+                planetSet.innerHTML = '';
+                data.planets.forEach(planet => {
+                    planetSet.innerHTML += `
+                        <div class="planet-card">
+                            <img src="https://placehold.co/300x200?text=${planet.pl_name}" alt="${planet.pl_name}" class="planet-image">
+                            <div class="planet-info">
+                                <h3>${planet.pl_name}</h3>
+                                <p>
+                                    Host Star: ${planet.hostname}<br>
+                                    Distance: ${planet.sy_dist.toFixed(2)} parsecs<br>
+                                    Planet Radius: ${planet.pl_rade.toFixed(2)} Earth Radii<br>
+                                    SNR: ${planet.snr.toFixed(2)}<br>
+                                    Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+    }
 </script>
+
 {% endblock %}
