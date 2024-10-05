@@ -1,23 +1,36 @@
-<!DOCTYPE html>
+{% extends 'website/base.html' %}
 {% load static %}
-<html lang="en">
+{% block content %}
+<h1>Exoplanet SNR Data</h1>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>DEADinside</title>
-</head>
+<h2>SNR Statistics</h2>
+<ul>
+    <li>Average SNR: {{ exoplanet_data.avg_snr|floatformat:2 }}</li>
+    <li>Maximum SNR: {{ exoplanet_data.max_snr|floatformat:2 }}</li>
+    <li>Minimum SNR: {{ exoplanet_data.min_snr|floatformat:2 }}</li>
+</ul>
 
-<body>
-    <header>
-</header>
-    <main class="container">
-        {% block content %}
-        {% endblock %}
-    </main>
-    <footer class="footer">
-    </footer>
-    <script src="{% static 'script.js' %}"></script>
-</body>
+<h2>Exoplanets</h2>
+<table>
+    <tr>
+        <th>Planet Name</th>
+        <th>Host Star</th>
+        <th>Semi-Major Axis (AU)</th>
+        <th>Planet Radius (Earth Radii)</th>
+        <th>Star Radius (Solar Radii)</th>
+        <th>Distance (parsecs)</th>
+        <th>SNR</th>
+    </tr>
+    {% for planet in exoplanet_data.exoplanets %}
+    <tr>
+        <td>{{ planet.pl_name }}</td>
+        <td>{{ planet.hostname }}</td>
+        <td>{{ planet.pl_orbsmax|floatformat:3 }}</td>
+        <td>{{ planet.pl_rade|floatformat:2 }}</td>
+        <td>{{ planet.st_rad|floatformat:2 }}</td>
+        <td>{{ planet.sy_dist|floatformat:2 }}</td>
+        <td>{{ planet.snr|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
