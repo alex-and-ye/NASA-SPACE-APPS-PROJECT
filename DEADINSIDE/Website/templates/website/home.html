@@ -29,25 +29,27 @@
 
         <!-- Main Content -->
         <div class="col-md-9">
-            <h1>Exoplanet SNR Data (Middle 95%)</h1>
+            <h1>Exoplanet Explorer</h1>
 
-            <h2>SNR Statistics</h2>
-            <ul>
-                <li>Total Planets: {{ exoplanet_data.total_planets }}</li>
-                <li>Average SNR: {{ exoplanet_data.avg_snr|floatformat:2 }}</li>
-                <li>Median SNR: {{ exoplanet_data.median_snr|floatformat:2 }}</li>
-                <li>Standard Deviation: {{ exoplanet_data.std_snr|floatformat:2 }}</li>
-                <li>Maximum SNR: {{ exoplanet_data.max_snr|floatformat:2 }}</li>
-                <li>Minimum SNR: {{ exoplanet_data.min_snr|floatformat:2 }}</li>
-            </ul>
+            <h2>Cosmic Statistics</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><strong>Total Exoplanets:</strong> {{ exoplanet_data.total_planets }}</li>
+                        <li><strong>Average SNR:</strong> {{ exoplanet_data.avg_snr|floatformat:2 }}</li>
+                        <li><strong>Median SNR:</strong> {{ exoplanet_data.median_snr|floatformat:2 }}</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><strong>SNR Standard Deviation:</strong> {{ exoplanet_data.std_snr|floatformat:2 }}</li>
+                        <li><strong>Maximum SNR:</strong> {{ exoplanet_data.max_snr|floatformat:2 }}</li>
+                        <li><strong>Minimum SNR:</strong> {{ exoplanet_data.min_snr|floatformat:2 }}</li>
+                    </ul>
+                </div>
+            </div>
 
-            <h2>SNR Distribution (Middle 95%)</h2>
-            <img src="data:image/png;base64,{{ exoplanet_data.histogram_image }}" alt="SNR Distribution Histogram" class="img-fluid">
-
-            <h2>SNR Box Plot (Middle 95%)</h2>
-            <img src="data:image/png;base64,{{ exoplanet_data.boxplot_image }}" alt="SNR Box Plot" class="img-fluid">
-
-            <h2>Exoplanets Gallery</h2>
+            <h2>Exoplanet Gallery</h2>
             <div class="planet-gallery">
                 <button class="nav-arrow left" onclick="navigatePlanets(-1)">&lt;</button>
                 <div class="planet-set">
@@ -72,6 +74,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
     .planet-gallery {
@@ -122,7 +125,61 @@
 <script>
     // Pass the data from Django to JavaScript
     const exoplanetData = {
-        totalPlanets: {{ exoplanet_data.total_planets }},
+        totalPlanets: {{ exoplanet_data.total_planets }}, 
+        telescopeDiameter: {{ filters.telescope_diameter }},
+        minSNR: {{ filters.min_snr }},
+        habitableOnly: '{{ filters.habitable_only }}',
+        maxDistance: {{ filters.max_distance }}
+    };
+
+    let currentSet = 0;
+    const planetsPerSet = 6;
+    const totalSets = Math.ceil(exoplanetData.totalPlanets / planetsPerSet);
+    
+    function navigatePlanets(direction) {
+        currentSet = (currentSet + direction + totalSets) % totalSets;
+        fetchPlanets(currentSet * planetsPerSet);
+    }
+    
+    function fetchPlanets(startIndex) {
+        const params = new URLSearchParams({
+            start: startIndex,
+            count: planetsPerSet,
+            telescope_diameter: exoplanetData.telescopeDiameter,
+            min_snr: exoplanetData.minSNR,
+            habitable_only: exoplanetData.habitableOnly,
+            max_distance: exoplanetData.maxDistance
+        });
+
+        fetch(`/get_planets/?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                const planetSet = document.querySelector('.planet-set');
+                planetSet.innerHTML = '';
+                data.planets.forEach(planet => {
+                    planetSet.innerHTML += `
+                        <div class="planet-card">
+                            <img src="https://placehold.co/300x200?text=${planet.pl_name}" alt="${planet.pl_name}" class="planet-image">
+                            <div class="planet-info">
+                                <h3>${planet.pl_name}</h3>
+                                <p>
+                                    Host Star: ${planet.hostname}<br>
+                                    Distance: ${planet.sy_dist.toFixed(2)} parsecs<br>
+                                    Planet Radius: ${planet.pl_rade.toFixed(2)} Earth Radii<br>
+                                    SNR: ${planet.snr.toFixed(2)}<br>
+                                    Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+    }
+</script>
+<script>
+    // Pass the data from Django to JavaScript
+    const exoplanetData = {
+        totalPlanets: {{ exoplanet_data.total_planets }}, 
         telescopeDiameter: {{ filters.telescope_diameter }},
         minSNR: {{ filters.min_snr }},
         habitableOnly: '{{ filters.habitable_only }}',
