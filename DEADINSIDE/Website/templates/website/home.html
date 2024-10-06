@@ -1,182 +1,233 @@
 {% extends 'website/base.html' %}
 {% load static %}
 {% block content %}
+<h1 style="color: aliceblue;">Welcome to Exoplanet Explorer</h1>
 <div class="container-fluid">
     <div class="row">
         <!-- Filter Bar -->
         <div class="col-md-3">
-            <h2>Filters</h2>
-            <form method="get" action=".">
+            <h2 class="text-light">Filters</h2>
+            <form method="get" action="." id="filter-form">
                 <div class="form-group">
-                    <label for="telescope_diameter">Telescope Diameter (m):</label>
-                    <input type="number" class="form-control" id="telescope_diameter" name="telescope_diameter" value="{{ filters.telescope_diameter }}" min="1" max="100" step="0.1">
+                    <label for="telescope_diameter" class="text-light">Telescope Diameter (m): <span id="telescope_diameter_value">{{ filters.telescope_diameter }}</span></label>
+                    <input type="range" class="form-control-range custom-range" id="telescope_diameter" name="telescope_diameter" min="1" max="100" step="0.1" value="{{ filters.telescope_diameter }}">
                 </div>
                 <div class="form-group">
-                    <label for="min_snr">Minimum SNR:</label>
-                    <input type="number" class="form-control" id="min_snr" name="min_snr" value="{{ filters.min_snr }}" min="1" max="1000">
+                    <label for="min_snr" class="text-light">Minimum SNR: <span id="min_snr_value">{{ filters.min_snr }}</span></label>
+                    <input type="range" class="form-control-range custom-range" id="min_snr" name="min_snr" min="1" max="1000" step="1" value="{{ filters.min_snr }}">
                 </div>
                 <div class="form-group">
-                    <label for="max_distance">Maximum Distance (parsecs):</label>
-                    <input type="number" class="form-control" id="max_distance" name="max_distance" value="{{ filters.max_distance }}" min="1" max="10000">
+                    <label for="max_distance" class="text-light">Maximum Distance (parsecs): <span id="max_distance_value">{{ filters.max_distance }}</span></label>
+                    <input type="range" class="form-control-range custom-range" id="max_distance" name="max_distance" min="1" max="10000" step="10" value="{{ filters.max_distance }}">
                 </div>
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="habitable_only" name="habitable_only" {% if filters.habitable_only == 'on' %}checked{% endif %}>
-                    <label class="form-check-label" for="habitable_only">Habitable Only</label>
+                    <label class="form-check-label text-light" for="habitable_only">Habitable Only</label>
                 </div>
                 <button type="submit" class="btn btn-primary mt-3">Apply Filters</button>
             </form>
         </div>
 
-        <!-- Main Content -->
+        <!-- Exoplanet Information -->
         <div class="col-md-9">
             <h1>Exoplanet Explorer</h1>
-
+        
             <h2>Cosmic Statistics</h2>
             <div class="row">
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li><strong>Total Exoplanets:</strong> {{ exoplanet_data.total_planets }}</li>
-                        <li><strong>Average SNR:</strong> {{ exoplanet_data.avg_snr|floatformat:2 }}</li>
-                        <li><strong>Median SNR:</strong> {{ exoplanet_data.median_snr|floatformat:2 }}</li>
+                        <li><strong>Total Exoplanets:</strong> <span id="total-planets">{{ exoplanet_data.total_planets }}</span></li>
+                        <li><strong>Average SNR:</strong> <span id="avg-snr">{{ exoplanet_data.avg_snr|floatformat:2 }}</span></li>
+                        <li><strong>Median SNR:</strong> <span id="median-snr">{{ exoplanet_data.median_snr|floatformat:2 }}</span></li>
                     </ul>
                 </div>
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li><strong>SNR Standard Deviation:</strong> {{ exoplanet_data.std_snr|floatformat:2 }}</li>
-                        <li><strong>Maximum SNR:</strong> {{ exoplanet_data.max_snr|floatformat:2 }}</li>
-                        <li><strong>Minimum SNR:</strong> {{ exoplanet_data.min_snr|floatformat:2 }}</li>
+                        <li><strong>SNR Standard Deviation:</strong> <span id="std-snr">{{ exoplanet_data.std_snr|floatformat:2 }}</span></li>
+                        <li><strong>Maximum SNR:</strong> <span id="max-snr">{{ exoplanet_data.max_snr|floatformat:2 }}</span></li>
+                        <li><strong>Minimum SNR:</strong> <span id="min-snr">{{ exoplanet_data.min_snr|floatformat:2 }}</span></li>
                     </ul>
                 </div>
             </div>
 
-            <h2>Exoplanet Gallery</h2>
+            <!-- Exoplanet Gallery -->
             <div class="planet-gallery">
                 <button class="nav-arrow left" onclick="navigatePlanets(-1)">&lt;</button>
-                <div class="planet-set">
-                    {% for planet in exoplanet_data.exoplanets|slice:":6" %}
-                    <div class="planet-card">
-                        <img src="https://placehold.co/300x200?text={{ planet.pl_name }}" alt="{{ planet.pl_name }}" class="planet-image">
-                        <div class="planet-info">
-                            <h3>{{ planet.pl_name }}</h3>
-                            <p>
-                                Host Star: {{ planet.hostname }}<br>
-                                Distance: {{ planet.sy_dist|floatformat:2 }} parsecs<br>
-                                Planet Radius: {{ planet.pl_rade|floatformat:2 }} Earth Radii<br>
-                                SNR: {{ planet.snr|floatformat:2 }}<br>
-                                Semi-Major Axis: {{ planet.pl_orbsmax|floatformat:3 }} AU
-                            </p>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+                <div id="canvas-container"></div>
                 <button class="nav-arrow right" onclick="navigatePlanets(1)">&gt;</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Canvas Container for Three.js Animation -->
+    <div id="canvas-container"></div>
+
+    <!-- Planet Info Modal -->
+    <div id="planet-info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-planet-name"></h2>
+            <p id="modal-planet-info"></p>
         </div>
     </div>
 </div>
 
 
 <style>
+     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #000;
+    }
+
+    #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    .container-fluid {
+        position: relative;
+        z-index: 1;
+        color: white;
+        padding-top: 20px;
+    }
+
+    .custom-range {
+        width: 100%;
+        max-width: 200px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+    }
+
+    .custom-range::-webkit-slider-thumb {
+        background: #007bff;
+    }
+
+    .custom-range::-moz-range-thumb {
+        background: #007bff;
+    }
+
+    .custom-range::-ms-thumb {
+        background: #007bff;
+    }
+
+    .form-check-input {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+
     .planet-gallery {
         display: flex;
-        overflow-x: hidden;
-        padding: 20px 0;
-        position: relative;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
     }
-    .planet-set {
-        display: flex;
-        transition: transform 0.3s ease;
-    }
-    .planet-card {
-        flex: 0 0 auto;
-        width: 300px;
-        margin-right: 20px;
-    }
-    .planet-info {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 0 0 10px 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .planet-image {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 10px 10px 0 0;
-    }
+
     .nav-arrow {
+        font-size: 24px;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+    }
+
+    #planet-container {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        color: black;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .planet-gallery {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        position: relative;
+        height: 400px; /* Adjust as needed */
+    }
+
+    .nav-arrow {
+        font-size: 24px;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 2em;
-        background: rgba(255,255,255,0.7);
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
+        z-index: 10;
     }
-    .nav-arrow.left { left: 10px; }
-    .nav-arrow.right { right: 10px; }
+
+    .nav-arrow.left {
+        left: 10px;
+    }
+
+    .nav-arrow.right {
+        right: 10px;
+    }
+
+    #canvas-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
 </style>
+<script src="../../static/js/exoplanets.js"></script>
 
-<script>
-    // Pass the data from Django to JavaScript
-    const exoplanetData = {
-        totalPlanets: {{ exoplanet_data.total_planets }}, 
-        telescopeDiameter: {{ filters.telescope_diameter }},
-        minSNR: {{ filters.min_snr }},
-        habitableOnly: '{{ filters.habitable_only }}',
-        maxDistance: {{ filters.max_distance }}
-    };
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-
-    let currentSet = 0;
-    const planetsPerSet = 6;
-    const totalSets = Math.ceil(exoplanetData.totalPlanets / planetsPerSet);
-    
-    function navigatePlanets(direction) {
-        currentSet = (currentSet + direction + totalSets) % totalSets;
-        fetchPlanets(currentSet * planetsPerSet);
-    }
-    
-    function fetchPlanets(startIndex) {
-        const params = new URLSearchParams({
-            start: startIndex,
-            count: planetsPerSet,
-            telescope_diameter: exoplanetData.telescopeDiameter,
-            min_snr: exoplanetData.minSNR,
-            habitable_only: exoplanetData.habitableOnly,
-            max_distance: exoplanetData.maxDistance
-        });
-
-        fetch(`/get_planets/?${params.toString()}`)
-            .then(response => response.json())
-            .then(data => {
-                const planetSet = document.querySelector('.planet-set');
-                planetSet.innerHTML = '';
-                data.planets.forEach(planet => {
-                    planetSet.innerHTML += `
-                        <div class="planet-card">
-                            <img src="https://placehold.co/300x200?text=${planet.pl_name}" alt="${planet.pl_name}" class="planet-image">
-                            <div class="planet-info">
-                                <h3>${planet.pl_name}</h3>
-                                <p>
-                                    Host Star: ${planet.hostname}<br>
-                                    Distance: ${planet.sy_dist.toFixed(2)} parsecs<br>
-                                    Planet Radius: ${planet.pl_rade.toFixed(2)} Earth Radii<br>
-                                    SNR: ${planet.snr.toFixed(2)}<br>
-                                    Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU
-                                </p>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-    }
-</script>
 
 {% endblock %}
