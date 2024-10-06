@@ -9,6 +9,36 @@ from scipy import stats
 import io
 import base64
 from django.http import JsonResponse
+from django.template.loader import render_to_string
+
+def home_page_view(request):
+    template_name = 'website/home.html'
+    
+    exoplanet_data = process_exoplanet_data(request)
+    
+    context = {
+        'user': request.user,
+        'exoplanet_data': exoplanet_data,
+        'filters': {
+            'telescope_diameter': request.GET.get('telescope_diameter', 6),
+            'min_snr': request.GET.get('min_snr', 5),
+            'habitable_only': request.GET.get('habitable_only', 'off'),
+            'max_distance': request.GET.get('max_distance', 1000),
+        }
+    }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'planets': exoplanet_data['exoplanets'],
+            'total_planets': exoplanet_data['total_planets'],
+            'avg_snr': exoplanet_data['avg_snr'],
+            'median_snr': exoplanet_data['median_snr'],
+            'std_snr': exoplanet_data['std_snr'],
+            'max_snr': exoplanet_data['max_snr'],
+            'min_snr': exoplanet_data['min_snr'],
+        })
+    
+    return render(request, template_name, context)
 
 def process_exoplanet_data(request):
     csv_file_path = os.path.join(os.path.dirname(__file__), 'exoplanet_data.csv')
@@ -103,23 +133,6 @@ def process_exoplanet_data(request):
         'total_planets': len(exoplanets),
         'df_filtered': df_filtered  # Add this line to return the filtered DataFrame
     }
-def home_page_view(request):
-    template_name = 'website/home.html'
-    
-    exoplanet_data = process_exoplanet_data(request)
-    
-    context = {
-        'user': request.user,
-        'exoplanet_data': exoplanet_data,
-        'filters': {
-            'telescope_diameter': request.GET.get('telescope_diameter', 6),
-            'min_snr': request.GET.get('min_snr', 5),
-            'habitable_only': request.GET.get('habitable_only', 'off'),
-            'max_distance': request.GET.get('max_distance', 1000),
-        }
-    }
-    return render(request, template_name, context)
-
 def get_planets(request):
     start = int(request.GET.get('start', 0))
     count = int(request.GET.get('count', 6))
