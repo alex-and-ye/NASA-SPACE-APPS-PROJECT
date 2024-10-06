@@ -41,6 +41,77 @@ createExoplanet(1, 'https://i.ibb.co/XDsdKZ2/image-mars.jpg', { x: 4.5, y: 0, z:
 // Position the camera
 camera.position.z = 10;
 
+let currentPlanetSet = 0;
+const planetsPerSet = 6;
+let allPlanets = [];
+
+function createPlanetMesh(radius, color) {
+    const geometry = new THREE.SphereGeometry(radius, 32, 32);
+    const material = new THREE.MeshStandardMaterial({ color: color });
+    return new THREE.Mesh(geometry, material);
+}
+
+function displayPlanets(planets) {
+    // Clear existing planets
+    scene.children.forEach(child => {
+        if (child instanceof THREE.Mesh && child.geometry instanceof THREE.SphereGeometry) {
+            scene.remove(child);
+        }
+    });
+
+    // Add new planets
+    planets.forEach((planet, index) => {
+        const planetMesh = createPlanetMesh(0.5, Math.random() * 0xffffff);
+        planetMesh.position.set((index - 2.5) * 2, 0, 0);
+        planetMesh.userData = planet;
+        scene.add(planetMesh);
+
+        planetMesh.cursor = 'pointer';
+        planetMesh.on('click', function(ev) {
+            showPlanetInfo(planet);
+        });
+    });
+}
+
+function navigatePlanets(direction) {
+    currentPlanetSet += direction;
+    if (currentPlanetSet < 0) currentPlanetSet = 0;
+    if (currentPlanetSet * planetsPerSet >= allPlanets.length) currentPlanetSet--;
+
+    const startIndex = currentPlanetSet * planetsPerSet;
+    displayPlanets(allPlanets.slice(startIndex, startIndex + planetsPerSet));
+}
+
+function showPlanetInfo(planet) {
+    const modal = document.getElementById('planet-info-modal');
+    const modalName = document.getElementById('modal-planet-name');
+    const modalInfo = document.getElementById('modal-planet-info');
+
+    modalName.textContent = planet.pl_name;
+    modalInfo.innerHTML = `
+        Host Star: ${planet.hostname}<br>
+        Distance: ${planet.sy_dist.toFixed(2)} parsecs<br>
+        Planet Radius: ${planet.pl_rade.toFixed(2)} Earth Radii<br>
+        SNR: ${planet.snr.toFixed(2)}<br>
+        Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU
+    `;
+
+    modal.style.display = 'block';
+}
+
+// Close modal when clicking on <span> (x)
+document.querySelector('.close').onclick = function() {
+    document.getElementById('planet-info-modal').style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('planet-info-modal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
 // Handle window resizing
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -51,10 +122,56 @@ window.addEventListener('resize', () => {
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Rotate the planets (optional)
-    
     renderer.render(scene, camera);
 }
 
 animate();
+
+// Fetch initial planet data
+fetch('/get_planets/?start=0&count=1000')
+    .then(response => response.json())
+    .then(data => {
+        allPlanets = data.planets;
+        navigatePlanets(0);
+    });
+
+// Update value displays for range inputs
+function updateRangeValue(inputId) {
+    const input = document.getElementById(inputId);
+    const valueSpan = document.getElementById(inputId + '_value');
+    valueSpan.textContent = input.value;
+}
+
+document.getElementById('telescope_diameter').addEventListener('input', () => updateRangeValue('telescope_diameter'));
+document.getElementById('min_snr').addEventListener('input', () => updateRangeValue('min_snr'));
+document.getElementById('max_distance').addEventListener('input', () => updateRangeValue('max_distance'));
+
+// Initialize values
+updateRangeValue('telescope_diameter');
+updateRangeValue('min_snr');
+updateRangeValue('max_distance');
+
+// Prevent form submission and use AJAX instead
+document.getElementById('filter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const searchParams = new URLSearchParams(formData);
+
+    fetch('?' + searchParams.toString(), {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update the planet data and redisplay
+        allPlanets = data.planets;
+        currentPlanetSet = 0;
+        navigatePlanets(0);
+        
+        // Update other parts of the page as needed
+        // ...
+    })
+    .catch(error => console.error('Error:', error));
+});
