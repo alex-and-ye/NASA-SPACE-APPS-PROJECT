@@ -90,10 +90,7 @@ function showPlanetInfo(planet) {
         Distance: ${planet.sy_dist.toFixed(2)} parsecs<br>
         Planet Radius: ${planet.pl_rade.toFixed(2)} Earth Radii<br>
         SNR: ${planet.snr.toFixed(2)}<br>
-        Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU<br>
-        Magnetic Field Potential: ${planet.B.toFixed(2)} μT<br>
-        Star Type: ${planet.star_type}<br>
-        In Habitable Zone: ${planet.in_habitable_zone ? 'Yes' : 'No'}
+        Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU
     `;
 
     modal.style.display = 'block';
@@ -119,23 +116,13 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-function rotatePlanets() {
-    scene.children.forEach(child => {
-        if (child instanceof THREE.Mesh && child.geometry instanceof THREE.SphereGeometry) {
-            child.rotation.y += 0.01;
-        }
-    });
-}
-
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    rotatePlanets();
     renderer.render(scene, camera);
 }
 
 animate();
-
 function updateCosmicStatistics(data) {
     document.getElementById('total-planets').textContent = data.total_planets;
     document.getElementById('avg-snr').textContent = data.avg_snr.toFixed(2);
@@ -144,7 +131,6 @@ function updateCosmicStatistics(data) {
     document.getElementById('max-snr').textContent = data.max_snr.toFixed(2);
     document.getElementById('min-snr').textContent = data.min_snr.toFixed(2);
 }
-
 // Fetch initial planet data
 function fetchPlanets(params = '') {
     fetch('/get_planets/?' + params)
@@ -156,6 +142,8 @@ function fetchPlanets(params = '') {
         })
         .catch(error => console.error('Error:', error));
 }
+
+
 
 fetchPlanets();
 
@@ -183,6 +171,7 @@ document.getElementById('filter-form').addEventListener('submit', function(e) {
 
     fetchPlanets(searchParams.toString());
 });
+
 
 function onMouseClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
