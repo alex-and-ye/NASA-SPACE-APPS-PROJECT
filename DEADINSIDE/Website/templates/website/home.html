@@ -1,8 +1,8 @@
 {% extends 'website/base.html' %}
 {% load static %}
 {% block content %}
-<h1 style="color: aliceblue;">Welcome to Exoplanet Explorer</h1>
 <div class="container-fluid">
+    <h1 class="main-title">Welcome to Exoplanet Explorer</h1>
     <div class="row">
         <!-- Filter Bar -->
         <div class="col-md-3">
@@ -27,7 +27,11 @@
                 <button type="submit" class="btn btn-primary mt-3">Apply Filters</button>
             </form>
         </div>
-
+        <div class="planet-gallery">
+            <button class="nav-arrow left" onclick="navigatePlanets(-1)">&lt;</button>
+            <div id="planet-container"></div>
+            <button class="nav-arrow right" onclick="navigatePlanets(1)">&gt;</button>
+        </div>
         <!-- Exoplanet Information -->
         <div class="col-md-9">
             <h1>Exoplanet Explorer</h1>
@@ -49,14 +53,10 @@
                     </ul>
                 </div>
             </div>
-
+            
             <!-- Exoplanet Gallery -->
-            <h2>Exoplanet Gallery</h2>
-            <div class="planet-gallery">
-                <button class="nav-arrow left" onclick="navigatePlanets(-1)">&lt;</button>
-                <div id="planet-container"></div>
-                <button class="nav-arrow right" onclick="navigatePlanets(1)">&gt;</button>
-            </div>
+            <!-- <h2>Exoplanet Gallery</h2> -->
+            
         </div>
     </div>
 
@@ -75,12 +75,29 @@
 
 
 <style>
-     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
     body, html {
         margin: 0;
         padding: 0;
         overflow: hidden;
         background-color: #000;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .container-fluid {
+        position: relative;
+        z-index: 1;
+        color: white;
+        padding-top: 20px;
+    }
+
+    .main-title {
+        color: aliceblue;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
 
     #canvas-container {
@@ -90,13 +107,6 @@
         width: 100%;
         height: 100%;
         z-index: -1;
-    }
-
-    .container-fluid {
-        position: relative;
-        z-index: 1;
-        color: white;
-        padding-top: 20px;
     }
 
     .custom-range {
@@ -134,24 +144,37 @@
     }
 
     .planet-gallery {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        position: relative;
+        height: 400px;
         margin-top: 20px;
     }
 
     .nav-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
         font-size: 24px;
         background: none;
         border: none;
         color: white;
         cursor: pointer;
+        z-index: 2;
+    }
+
+    .nav-arrow.left {
+        left: 10px;
+    }
+
+    .nav-arrow.right {
+        right: 10px;
     }
 
     #planet-container {
-        display: flex;
-        justify-content: space-around;
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
+        height: 100%;
     }
 
     .modal {
