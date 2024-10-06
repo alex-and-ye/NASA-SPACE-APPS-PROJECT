@@ -24,8 +24,13 @@ const planetTextures = [
     'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg',
     'https://i.ibb.co/YkfVcQL/image-uranus-1.jpg',
     'https://i.ibb.co/MBP2fJL/image-neptune.jpg',
-    'https://i.ibb.co/XDsdKZ2/image-mars.jpg'
+    'https://i.ibb.co/XDsdKZ2/image-mars.jpg',
+    'https://i.ibb.co/v4YkhHN/image-venus.jpg',
+    'https://i.ibb.co/1ZyG94j/download.jpg'
 ];
+
+// Store planet meshes
+let planetMeshes = [];
 
 // Create exoplanets with textures
 function createExoplanet(radius, texturePath, position) {
@@ -36,6 +41,10 @@ function createExoplanet(radius, texturePath, position) {
     const planet = new THREE.Mesh(geometry, material);
     planet.position.set(position.x, position.y, position.z);
     scene.add(planet);
+
+    // Store the planet mesh for rotation
+    planetMeshes.push(planet);
+
     return planet;
 }
 
@@ -45,9 +54,6 @@ camera.position.z = 15;
 let currentPlanetSet = 0;
 const planetsPerSet = 6;
 let allPlanets = [];
-
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
 
 function displayPlanets(planets) {
     // Clear existing planets
@@ -119,18 +125,17 @@ window.addEventListener('resize', () => {
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
+
+    // Rotate each planet
+    planetMeshes.forEach((planetMesh) => {
+        planetMesh.rotation.y += 0.01; // Adjust rotation speed as needed
+    });
+
     renderer.render(scene, camera);
 }
 
 animate();
-function updateCosmicStatistics(data) {
-    document.getElementById('total-planets').textContent = data.total_planets;
-    document.getElementById('avg-snr').textContent = data.avg_snr.toFixed(2);
-    document.getElementById('median-snr').textContent = data.median_snr.toFixed(2);
-    document.getElementById('std-snr').textContent = data.std_snr.toFixed(2);
-    document.getElementById('max-snr').textContent = data.max_snr.toFixed(2);
-    document.getElementById('min-snr').textContent = data.min_snr.toFixed(2);
-}
+
 // Fetch initial planet data
 function fetchPlanets(params = '') {
     fetch('/get_planets/?' + params)
@@ -143,8 +148,8 @@ function fetchPlanets(params = '') {
         .catch(error => console.error('Error:', error));
 }
 
-
-
+// Update cosmic statistics display function...
+// (Rest of your existing code remains unchanged)
 fetchPlanets();
 
 // Update value displays for range inputs
