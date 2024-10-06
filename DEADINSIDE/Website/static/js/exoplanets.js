@@ -13,19 +13,21 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(5, 5, 5).normalize();
 scene.add(directionalLight);
 
-// Create exoplanets
-function createExoplanet(radius, color, position) {
-  const geometry = new THREE.SphereGeometry(radius, 32, 32);
-  const material = new THREE.MeshStandardMaterial({ color: color }); // Use MeshStandardMaterial for better lighting effects
-  const planet = new THREE.Mesh(geometry, material);
-  planet.position.set(position.x, position.y, position.z);
-  scene.add(planet);
-  return planet;
+// Create exoplanets with textures
+function createExoplanet(radius, texturePath, position) {
+    const geometry = new THREE.SphereGeometry(radius, 32, 32);
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load(texturePath);
+    const material = new THREE.MeshStandardMaterial({ map: texture }); // Apply texture to material
+    const planet = new THREE.Mesh(geometry, material);
+    planet.position.set(position.x, position.y, position.z);
+    scene.add(planet);
+    return planet;
 }
 
-// Add exoplanets to the scene
-const exoplanet1 = createExoplanet(1, 0xff0000, { x: -1, y: 0, z: 0 });
-const exoplanet2 = createExoplanet(0.8, 0x00ff00, { x: 2, y: 0, z: 0 });
+// Add exoplanets to the scene with textures
+const exoplanet1 = createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg', { x: -1, y: 0, z: 0 });
+const exoplanet2 = createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg',  { x: 2, y: 0, z: 0 });
 
 // Create axes
 function createAxes(length) {
@@ -33,7 +35,7 @@ function createAxes(length) {
     scene.add(axesHelper);
 }
 
-// Call the function to create axes with a length of 5 units
+// Call the function to create axes with a length of 30 units
 createAxes(30);
 
 // Position the camera
