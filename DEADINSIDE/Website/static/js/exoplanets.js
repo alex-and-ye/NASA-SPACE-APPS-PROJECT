@@ -27,25 +27,34 @@ function createExoplanet(radius, color, position) {
 const exoplanet1 = createExoplanet(1, 0xff0000, { x: -1, y: 0, z: 0 });
 const exoplanet2 = createExoplanet(0.8, 0x00ff00, { x: 2, y: 0, z: 0 });
 
+// Create axes
+function createAxes(length) {
+    const axesHelper = new THREE.AxesHelper(length);
+    scene.add(axesHelper);
+}
+
+// Call the function to create axes with a length of 5 units
+createAxes(30);
+
 // Position the camera
 camera.position.z = 10;
 
 // Handle window resizing
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // Animation loop
 function animate() {
-  requestAnimationFrame(animate);
-  
-  // Rotate the planets
-  exoplanet1.rotation.y += 0.01;
-  exoplanet2.rotation.y += 0.005;
-  
-  renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+    
+    // Rotate the planets
+    exoplanet1.rotation.y += 0.01;
+    exoplanet2.rotation.y += 0.005;
+    
+    renderer.render(scene, camera);
 }
 
 animate();
