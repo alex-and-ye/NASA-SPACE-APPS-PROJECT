@@ -144,7 +144,11 @@ function updateCosmicStatistics(data) {
 
 // Fetch initial planet data
 function fetchPlanets(params = '') {
-    fetch('/get_planets/?' + params)
+    const habitableOnly = document.getElementById('habitable_only').checked;
+    const updatedParams = new URLSearchParams(params);
+    updatedParams.set('habitable_only', habitableOnly ? 'on' : 'off');
+
+    fetch('/get_planets/?' + updatedParams.toString())
         .then(response => response.json())
         .then(data => {
             allPlanets = data.planets;
@@ -153,6 +157,13 @@ function fetchPlanets(params = '') {
         })
         .catch(error => console.error('Error:', error));
 }
+
+// Update the event listener for the habitable_only checkbox
+document.getElementById('habitable_only').addEventListener('change', function() {
+    const formData = new FormData(document.getElementById('filter-form'));
+    const searchParams = new URLSearchParams(formData);
+    fetchPlanets(searchParams.toString());
+});
 
 fetchPlanets();
 

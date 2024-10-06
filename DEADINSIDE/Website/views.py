@@ -53,7 +53,7 @@ def process_exoplanet_data(request):
     max_distance = float(request.GET.get('max_distance', 1000))
 
     # Select only the columns we need
-    columns_of_interest = ['pl_name', 'hostname', 'pl_orbsmax', 'pl_rade', 'st_rad', 'sy_dist', 'pl_eqt']
+    columns_of_interest = ['pl_name', 'hostname', 'pl_orbsmax', 'pl_rade', 'st_rad', 'sy_dist', 'pl_eqt', 'st_teff', 'pl_bmasse']
     df_filtered = df[columns_of_interest]
 
     # Remove any rows with missing data
@@ -64,12 +64,33 @@ def process_exoplanet_data(request):
     df_filtered['snr'] = snro * (((df_filtered['st_rad'] * df_filtered['pl_rade'] * telescope_diameter / 6) / 
                                  ((df_filtered['sy_dist'] / 10) * df_filtered['pl_orbsmax']))**2)
 
+    # Calculate Magnetic Field potential
+    df_filtered['B'] = df_filtered['pl_bmasse'] / (df_filtered['pl_rade'] ** 3)
+
+    # Calculate habitable zone
+    def get_habitable_zone(star_temp):
+        if star_temp > 5200 and star_temp <= 6000:  # G-type star
+            return 0.95, 1.37
+        elif star_temp > 3700 and star_temp <= 5200:  # K-type star
+            return 0.5, 1.0
+        elif star_temp <= 3700:  # M-type star
+            return 0.03, 0.5
+        else:
+            return None, None
+
+    df_filtered['hz_inner'], df_filtered['hz_outer'] = zip(*df_filtered['st_teff'].apply(get_habitable_zone))
+    df_filtered['in_habitable_zone'] = (df_filtered['pl_orbsmax'] >= df_filtered['hz_inner']) &  (df_filtered['pl_orbsmax'] <= df_filtered['hz_outer'])
+
     # Apply filters
     df_filtered = df_filtered[df_filtered['snr'] > min_snr]
     df_filtered = df_filtered[df_filtered['sy_dist'] <= max_distance]
 
     if habitable_only:
-        df_filtered = df_filtered[(df_filtered['pl_eqt'] >= 200) & (df_filtered['pl_eqt'] <= 300)]
+        df_filtered = df_filtered[
+            df_filtered['in_habitable_zone'] &
+            (df_filtered['pl_eqt'] >= 200) & (df_filtered['pl_eqt'] <= 300) &
+            (df_filtered['B'] >= 25) & (df_filtered['B'] <= 65)
+        ]
 
     # Keep only the middle 95% of the data
     lower_percentile = df_filtered['snr'].quantile(0.025)
@@ -131,23 +152,18 @@ def process_exoplanet_data(request):
         'histogram_image': histogram_image,
         'boxplot_image': boxplot_image,
         'total_planets': len(exoplanets),
-        'df_filtered': df_filtered  # Add this line to return the filtered DataFrame
+        'df_filtered': df_filtered
     }
-def get_planets(request):
-    start = int(request.GET.get('start', 0))
-    count = int(request.GET.get('count', 6))
-    
-    # Get filter parameters from the request
-    telescope_diameter = float(request.GET.get('telescope_diameter', 6))
-    min_snr = float(request.GET.get('min_snr', 5))
-    habitable_only = request.GET.get('habitable_only', 'off') == 'on'
-    max_distance = float(request.GET.get('max_distance', 1000))
 
-    # Process the exoplanet data with the given filters
+def get_planets(request):
     exoplanet_data = process_exoplanet_data(request)
-    df_filtered = exoplanet_data['df_filtered']
     
-    # Get the requested slice of planets
-    planets = df_filtered.iloc[start:start+count].to_dict('records')
-    
-    return JsonResponse({'planets': planets})
+    return JsonResponse({
+        'planets': exoplanet_data['exoplanets'],
+        'total_planets': exoplanet_data['total_planets'],
+        'avg_snr': exoplanet_data['avg_snr'],
+        'median_snr': exoplanet_data['median_snr'],
+        'std_snr': exoplanet_data['std_snr'],
+        'max_snr': exoplanet_data['max_snr'],
+        'min_snr': exoplanet_data['min_snr'],
+    })
