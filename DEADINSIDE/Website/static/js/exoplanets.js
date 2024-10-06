@@ -90,7 +90,10 @@ function showPlanetInfo(planet) {
         Distance: ${planet.sy_dist.toFixed(2)} parsecs<br>
         Planet Radius: ${planet.pl_rade.toFixed(2)} Earth Radii<br>
         SNR: ${planet.snr.toFixed(2)}<br>
-        Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU
+        Semi-Major Axis: ${planet.pl_orbsmax.toFixed(3)} AU<br>
+        Magnetic Field Potential: ${planet.B.toFixed(2)} μT<br>
+        Star Type: ${planet.star_type}<br>
+        In Habitable Zone: ${planet.in_habitable_zone ? 'Yes' : 'No'}
     `;
 
     modal.style.display = 'block';
@@ -119,6 +122,7 @@ window.addEventListener('resize', () => {
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
+    rotatePlanets();
     renderer.render(scene, camera);
 }
 
@@ -172,6 +176,15 @@ document.getElementById('filter-form').addEventListener('submit', function(e) {
     fetchPlanets(searchParams.toString());
 });
 
+function rotatePlanets() {
+    scene.children.forEach(child => {
+        if (child instanceof THREE.Mesh && child.geometry instanceof THREE.SphereGeometry) {
+            child.rotation.y += 0.01;
+        }
+    });
+}
+
+// Modify the animate function
 
 function onMouseClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
