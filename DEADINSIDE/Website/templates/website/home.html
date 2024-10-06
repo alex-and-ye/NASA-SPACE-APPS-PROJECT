@@ -1,6 +1,21 @@
 {% extends 'website/base.html' %}
 {% load static %}
 {% block content %}
+<style>
+    /* Importing Google Font */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+    /* Applying the font to body and all text */
+    body {
+        font-family: 'Roboto', sans-serif;
+        color: #333; /* Optional: Change text color for better visibility */
+    }
+
+    h1 {
+        margin-bottom: 20px; /* Space below the title */
+    }
+</style>
+<h1>Welcome to Exoplanet Explorer</h1>
 <div class="container-fluid">
     <div class="row">
         <!-- Filter Bar -->
