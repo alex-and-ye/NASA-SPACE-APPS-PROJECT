@@ -1,4 +1,3 @@
-// Three.js Animation Setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -116,13 +115,24 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// Rotate planets
+function rotatePlanets() {
+    scene.children.forEach(child => {
+        if (child instanceof THREE.Mesh && child.geometry instanceof THREE.SphereGeometry) {
+            child.rotation.y += 0.01;
+        }
+    });
+}
+
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
+    rotatePlanets();
     renderer.render(scene, camera);
 }
 
 animate();
+
 function updateCosmicStatistics(data) {
     document.getElementById('total-planets').textContent = data.total_planets;
     document.getElementById('avg-snr').textContent = data.avg_snr.toFixed(2);
@@ -131,6 +141,7 @@ function updateCosmicStatistics(data) {
     document.getElementById('max-snr').textContent = data.max_snr.toFixed(2);
     document.getElementById('min-snr').textContent = data.min_snr.toFixed(2);
 }
+
 // Fetch initial planet data
 function fetchPlanets(params = '') {
     fetch('/get_planets/?' + params)
@@ -142,8 +153,6 @@ function fetchPlanets(params = '') {
         })
         .catch(error => console.error('Error:', error));
 }
-
-
 
 fetchPlanets();
 
@@ -169,9 +178,22 @@ document.getElementById('filter-form').addEventListener('submit', function(e) {
     const formData = new FormData(this);
     const searchParams = new URLSearchParams(formData);
 
-    fetchPlanets(searchParams.toString());
+    fetch('?' + searchParams.toString(), {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update the planet data and redisplay
+        allPlanets = data.planets;
+        currentPlanetSet = 0;
+        navigatePlanets(0);
+        updateCosmicStatistics(data);
+    })
+    .catch(error => console.error('Error:', error));
 });
-
 
 function onMouseClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
