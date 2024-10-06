@@ -26,8 +26,10 @@ function createExoplanet(radius, texturePath, position) {
 }
 
 // Add exoplanets to the scene with textures
-const exoplanet1 = createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg', { x: -1, y: 0, z: 0 });
-const exoplanet2 = createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg',  { x: 2, y: 0, z: 0 });
+const exoplanet1 = createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg', { x: -5, y: 0, z: 0 });
+const exoplanet2 = createExoplanet(1, 'https://i.ibb.co/YkfVcQL/image-uranus-1.jpg',  { x: -1, y: 0, z: 0 });
+const exoplanet3 = createExoplanet(1, 'https://i.ibb.co/MBP2fJL/image-neptune.jpg ',  { x: 3, y: 0, z: 0 }); 
+const exoplanet4 = createExoplanet(1, 'https://i.ibb.co/XDsdKZ2/image-mars.jpg' , { x: 6, y: 0, z: 0 }); 
 
 // Create axes
 function createAxes(length) {
@@ -53,8 +55,8 @@ function animate() {
     requestAnimationFrame(animate);
     
     // Rotate the planets
-    exoplanet1.rotation.y += 0.01;
-    exoplanet2.rotation.y += 0.005;
+    //exoplanet1.rotation.y += 0.01;
+    //exoplanet2.rotation.y += 0.005;
     
     renderer.render(scene, camera);
 }
