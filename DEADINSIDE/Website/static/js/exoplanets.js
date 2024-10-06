@@ -53,8 +53,8 @@ function animate() {
     requestAnimationFrame(animate);
     
     // Rotate the planets
-    exoplanet1.rotation.y += 0.01;
-    exoplanet2.rotation.y += 0.005;
+   // exoplanet1.rotation.y += 0.01;
+    //exoplanet2.rotation.y += 0.005;
     
     renderer.render(scene, camera);
 }
