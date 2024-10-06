@@ -1,4 +1,3 @@
-
 // Three.js Animation Setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -7,7 +6,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 // Create lighting
-const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
+const ambientLight = new THREE.AmbientLight(0x404040);
 scene.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -17,8 +16,16 @@ scene.add(directionalLight);
 // Load background texture
 const backgroundTextureLoader = new THREE.TextureLoader();
 backgroundTextureLoader.load('https://i.ibb.co/chBqdxM/background2.jpg', (texture) => {
-    scene.background = texture; // Set the loaded texture as the scene's background
+    scene.background = texture;
 });
+
+// Planet textures
+const planetTextures = [
+    'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg',
+    'https://i.ibb.co/YkfVcQL/image-uranus-1.jpg',
+    'https://i.ibb.co/MBP2fJL/image-neptune.jpg',
+    'https://i.ibb.co/XDsdKZ2/image-mars.jpg'
+];
 
 // Create exoplanets with textures
 function createExoplanet(radius, texturePath, position) {
@@ -32,24 +39,15 @@ function createExoplanet(radius, texturePath, position) {
     return planet;
 }
 
-// Add exoplanets to the scene with textures
-createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg', { x: -3.5, y: 0, z: 0 });
-createExoplanet(1, 'https://i.ibb.co/YkfVcQL/image-uranus-1.jpg', { x: -1, y: 0, z: 0 });
-createExoplanet(1, 'https://i.ibb.co/MBP2fJL/image-neptune.jpg', { x: 2, y: 0, z: 0 });
-createExoplanet(1, 'https://i.ibb.co/XDsdKZ2/image-mars.jpg', { x: 4.5, y: 0, z: 0 });
-
 // Position the camera
-camera.position.z = 10;
+camera.position.z = 15;
 
 let currentPlanetSet = 0;
 const planetsPerSet = 6;
 let allPlanets = [];
 
-function createPlanetMesh(radius, color) {
-    const geometry = new THREE.SphereGeometry(radius, 32, 32);
-    const material = new THREE.MeshStandardMaterial({ color: color });
-    return new THREE.Mesh(geometry, material);
-}
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
 function displayPlanets(planets) {
     // Clear existing planets
@@ -61,15 +59,14 @@ function displayPlanets(planets) {
 
     // Add new planets
     planets.forEach((planet, index) => {
-        const planetMesh = createPlanetMesh(0.5, Math.random() * 0xffffff);
-        planetMesh.position.set((index - 2.5) * 2, 0, 0);
+        const textureIndex = index % planetTextures.length;
+        const planetMesh = createExoplanet(1.5, planetTextures[textureIndex], { x: (index - 2.5) * 4, y: 0, z: 0 });
         planetMesh.userData = planet;
-        scene.add(planetMesh);
 
-        planetMesh.cursor = 'pointer';
-        planetMesh.on('click', function(ev) {
+        // Add click event listener to each planet
+        planetMesh.callback = function() {
             showPlanetInfo(planet);
-        });
+        };
     });
 }
 
@@ -126,14 +123,29 @@ function animate() {
 }
 
 animate();
-
+function updateCosmicStatistics(data) {
+    document.getElementById('total-planets').textContent = data.total_planets;
+    document.getElementById('avg-snr').textContent = data.avg_snr.toFixed(2);
+    document.getElementById('median-snr').textContent = data.median_snr.toFixed(2);
+    document.getElementById('std-snr').textContent = data.std_snr.toFixed(2);
+    document.getElementById('max-snr').textContent = data.max_snr.toFixed(2);
+    document.getElementById('min-snr').textContent = data.min_snr.toFixed(2);
+}
 // Fetch initial planet data
-fetch('/get_planets/?start=0&count=1000')
-    .then(response => response.json())
-    .then(data => {
-        allPlanets = data.planets;
-        navigatePlanets(0);
-    });
+function fetchPlanets(params = '') {
+    fetch('/get_planets/?' + params)
+        .then(response => response.json())
+        .then(data => {
+            allPlanets = data.planets;
+            navigatePlanets(0);
+            updateCosmicStatistics(data);
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+
+
+fetchPlanets();
 
 // Update value displays for range inputs
 function updateRangeValue(inputId) {
@@ -157,21 +169,24 @@ document.getElementById('filter-form').addEventListener('submit', function(e) {
     const formData = new FormData(this);
     const searchParams = new URLSearchParams(formData);
 
-    fetch('?' + searchParams.toString(), {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Update the planet data and redisplay
-        allPlanets = data.planets;
-        currentPlanetSet = 0;
-        navigatePlanets(0);
-        
-        // Update other parts of the page as needed
-        // ...
-    })
-    .catch(error => console.error('Error:', error));
+    fetchPlanets(searchParams.toString());
 });
+
+
+function onMouseClick(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    for (let i = 0; i < intersects.length; i++) {
+        if (intersects[i].object.callback) {
+            intersects[i].object.callback();
+            break;
+        }
+    }
+}
+
+window.addEventListener('click', onMouseClick, false);

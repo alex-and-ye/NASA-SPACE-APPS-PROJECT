@@ -1,21 +1,7 @@
 {% extends 'website/base.html' %}
 {% load static %}
 {% block content %}
-<style>
-    /* Importing Google Font */
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
-    /* Applying the font to body and all text */
-    body {
-        font-family: 'Roboto', sans-serif;
-        color: #333; /* Optional: Change text color for better visibility */
-    }
-
-    h1 {
-        margin-bottom: 20px; /* Space below the title */
-    }
-</style>
-<h1>Welcome to Exoplanet Explorer</h1>
+<h1 style="color: aliceblue;">Welcome to Exoplanet Explorer</h1>
 <div class="container-fluid">
     <div class="row">
         <!-- Filter Bar -->
@@ -45,21 +31,21 @@
         <!-- Exoplanet Information -->
         <div class="col-md-9">
             <h1>Exoplanet Explorer</h1>
-
+        
             <h2>Cosmic Statistics</h2>
             <div class="row">
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li><strong>Total Exoplanets:</strong> {{ exoplanet_data.total_planets }}</li>
-                        <li><strong>Average SNR:</strong> {{ exoplanet_data.avg_snr|floatformat:2 }}</li>
-                        <li><strong>Median SNR:</strong> {{ exoplanet_data.median_snr|floatformat:2 }}</li>
+                        <li><strong>Total Exoplanets:</strong> <span id="total-planets">{{ exoplanet_data.total_planets }}</span></li>
+                        <li><strong>Average SNR:</strong> <span id="avg-snr">{{ exoplanet_data.avg_snr|floatformat:2 }}</span></li>
+                        <li><strong>Median SNR:</strong> <span id="median-snr">{{ exoplanet_data.median_snr|floatformat:2 }}</span></li>
                     </ul>
                 </div>
                 <div class="col-md-6">
                     <ul class="list-unstyled">
-                        <li><strong>SNR Standard Deviation:</strong> {{ exoplanet_data.std_snr|floatformat:2 }}</li>
-                        <li><strong>Maximum SNR:</strong> {{ exoplanet_data.max_snr|floatformat:2 }}</li>
-                        <li><strong>Minimum SNR:</strong> {{ exoplanet_data.min_snr|floatformat:2 }}</li>
+                        <li><strong>SNR Standard Deviation:</strong> <span id="std-snr">{{ exoplanet_data.std_snr|floatformat:2 }}</span></li>
+                        <li><strong>Maximum SNR:</strong> <span id="max-snr">{{ exoplanet_data.max_snr|floatformat:2 }}</span></li>
+                        <li><strong>Minimum SNR:</strong> <span id="min-snr">{{ exoplanet_data.min_snr|floatformat:2 }}</span></li>
                     </ul>
                 </div>
             </div>
@@ -89,6 +75,7 @@
 
 
 <style>
+     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
     body, html {
         margin: 0;
         padding: 0;
