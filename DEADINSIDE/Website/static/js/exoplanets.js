@@ -33,19 +33,10 @@ function createExoplanet(radius, texturePath, position) {
 }
 
 // Add exoplanets to the scene with textures
-createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg', { x: -3, y: 0, z: 0 });
+createExoplanet(1, 'https://i.ibb.co/Zcs8PY8/image-exoplanet.jpg', { x: -3.5, y: 0, z: 0 });
 createExoplanet(1, 'https://i.ibb.co/YkfVcQL/image-uranus-1.jpg', { x: -1, y: 0, z: 0 });
 createExoplanet(1, 'https://i.ibb.co/MBP2fJL/image-neptune.jpg', { x: 2, y: 0, z: 0 });
-createExoplanet(1, 'https://i.ibb.co/XDsdKZ2/image-mars.jpg', { x: 4, y: 0, z: 0 });
-
-// Create axes
-function createAxes(length) {
-    const axesHelper = new THREE.AxesHelper(length);
-    scene.add(axesHelper);
-}
-
-// Call the function to create axes with a length of 30 units
-createAxes(30);
+createExoplanet(1, 'https://i.ibb.co/XDsdKZ2/image-mars.jpg', { x: 4.5, y: 0, z: 0 });
 
 // Position the camera
 camera.position.z = 10;
