@@ -133,10 +133,29 @@ def process_exoplanet_data(request):
         'total_planets': len(exoplanets),
         'df_filtered': df_filtered  # Add this line to return the filtered DataFrame
     }
+# def get_planets(request):
+#     start = int(request.GET.get('start', 0))
+#     count = int(request.GET.get('count', 6))
+    
+#     # Get filter parameters from the request
+#     telescope_diameter = float(request.GET.get('telescope_diameter', 6))
+#     min_snr = float(request.GET.get('min_snr', 5))
+#     habitable_only = request.GET.get('habitable_only', 'off') == 'on'
+#     max_distance = float(request.GET.get('max_distance', 1000))
+
+#     # Process the exoplanet data with the given filters
+#     exoplanet_data = process_exoplanet_data(request)
+#     df_filtered = exoplanet_data['df_filtered']
+    
+#     # Get the requested slice of planets
+#     planets = df_filtered.iloc[start:start+count].to_dict('records')
+    
+#     return JsonResponse({'planets': planets})
+
 def get_planets(request):
     start = int(request.GET.get('start', 0))
     count = int(request.GET.get('count', 6))
-    
+
     # Get filter parameters from the request
     telescope_diameter = float(request.GET.get('telescope_diameter', 6))
     min_snr = float(request.GET.get('min_snr', 5))
@@ -146,8 +165,12 @@ def get_planets(request):
     # Process the exoplanet data with the given filters
     exoplanet_data = process_exoplanet_data(request)
     df_filtered = exoplanet_data['df_filtered']
+
+    # Apply the habitable filter if checked
+    if habitable_only:
+        df_filtered = df_filtered[(df_filtered['pl_eqt'] >= 200) & (df_filtered['pl_eqt'] <= 300)]
     
-    # Get the requested slice of planets
+    # Get the requested slice of planets after applying filters
     planets = df_filtered.iloc[start:start+count].to_dict('records')
-    
+
     return JsonResponse({'planets': planets})
