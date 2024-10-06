@@ -1,0 +1,2 @@
+To run the code please enter the DEADINSIDE folder and run the python manage.py runserver
+command, to run the server, you need to have python installed and django, numpy, os and matplotlib installed, also make sure all the libraries from views.py installed, if it wont work, please update all the libraries required
