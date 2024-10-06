@@ -27,7 +27,7 @@
             </form>
         </div>
 
-        <!-- Main Content -->
+        <!-- Exoplanet Information -->
         <div class="col-md-9">
             <h1>Exoplanet Explorer</h1>
 
@@ -49,6 +49,7 @@
                 </div>
             </div>
 
+            <!-- Exoplanet Gallery -->
             <h2>Exoplanet Gallery</h2>
             <div class="planet-gallery">
                 <button class="nav-arrow left" onclick="navigatePlanets(-1)">&lt;</button>
@@ -73,11 +74,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Canvas Container for Three.js Animation -->
     <div id="canvas-container"></div>
+
 </div>
 
 
 <style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Prevent scrolling */
+    }
+
+    #canvas-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1; /* Send it to the back */
+    }
+
+    .container-fluid {
+        position: relative;
+        z-index: 1; /* Bring content above the canvas */
+        color: white; /* Optional: Change text color for visibility */
+    }
+
     .planet-gallery {
         display: flex;
         overflow-x: hidden;
@@ -94,7 +119,7 @@
         margin-right: 20px;
     }
     .planet-info {
-        background: #f8f9fa;
+        background: rgba(248, 249, 250, 0.8); /* Semi-transparent background */
         padding: 15px;
         border-radius: 0 0 10px 10px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -125,6 +150,7 @@
 </style>
 <script src="../../static/js/exoplanets.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
     // Pass the data from Django to JavaScript
