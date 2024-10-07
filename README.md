@@ -23,3 +23,6 @@ python manage.py runserver
 
 
 If the server doesn't start, make sure all required libraries are updated and installed properly.
+
+## Link to the Demo video of the final project
+https://drive.google.com/file/d/1gHUwYFMA5B1nSUHZWCVxE6vLyOg3lqOR/view?usp=sharing
