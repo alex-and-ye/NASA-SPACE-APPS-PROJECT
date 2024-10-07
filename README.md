@@ -1,2 +1,18 @@
-To run the code please enter the DEADINSIDE folder and run the python manage.py runserver
-command, to run the server, you need to have python installed and django, numpy, os and matplotlib installed, also make sure all the libraries from views.py installed, if it wont work, please update all the libraries required
+**Exoplanet Characterization and Habitability Project**
+This project explores potential exoplanets by evaluating their habitability and possible characterization through the Habitable Worlds Observatory (HWO). It utilizes data from the NASA Exoplanet Archive for necessary calculations and displays the findings through an interactive website with an integrated backend database and graphical interface for enhanced data visualization.
+
+*Prerequisites*
+To run the project, ensure you have the following installed:
+Python
+Django
+NumPy
+Matplotlib
+Any additional libraries specified in views.py
+
+*Running the Project*
+Navigate to the DEADINSIDE folder.
+
+*Start the server by running the command:*
+python manage.py runserver
+
+If the server doesn't start, make sure all required libraries are updated and installed properly.
